@@ -16,117 +16,97 @@ import sys
 from argparse import ArgumentParser
 import hashlib
 
-def calculate_hash(file_path):
+DIR_PATH = "C:\\Sgu-Infbez-Kate\\Task1\\files"
+HASH_FILE_NAME = "hashes.txt"
+HASHFILE_PATH = os.path.join(DIR_PATH, HASH_FILE_NAME) 
+TEST_FILE_PATH = os.path.join(DIR_PATH,"dmde-free-2.6.0.522-win32-gui/dev9x.dll")
+
+def calculate_hash(file):
     hash_value = 0
     bytes_count = 2
-    with open(file_path, 'rb') as f:
+    with open(file, 'rb') as f:
         while True:
-            chunk = f.read(bytes_count)
-            if not chunk:  # If the end of the file
+            bytes = f.read(bytes_count)
+            if not bytes:  # Stop if the end of the file
                 break
-            # If necessary, add the required number of bytes to the multiplicity
-            mod = chunk % bytes_count
+            mod = len(bytes) % bytes_count
+            int_val = int.from_bytes(bytes, byteorder='big')
             if mod > 0:
-                chunk += b'\x00' * (mod)
-            hash_value ^= int.from_bytes(chunk, byteorder='big')  # Make XOR
+                int_val = int_val << 8 * mod
+            hash_value ^= int_val  # XOR
     return hash_value
 
-def save_hashes(directory, hash_file):
-    with open(hash_file, 'w') as f:
-        for dirpath, dirnames, filenames in os.walk(directory):
-            for file in filenames:
+def save_hashes():
+    with open(HASHFILE_PATH, 'w') as f:
+        for dirpath, dirN, fileN in os.walk(DIR_PATH):
+            for file in fileN:
                 file_path = os.path.join(dirpath, file)
-                if file_path != hash_file:  # Exclude hash file
+                if file_path != HASHFILE_PATH:  # Exclude hashfile
                     file_hash = calculate_hash(file_path)
-                    f.write(f"{file_path},{file_hash}\n")
+                    f.write(f"{file_path}={file_hash}\n")
 
-def check_integrity(directory, hash_file):
-    current_hashes = {}
+def check_integrity():
+    previous_hashes = {}
+    previous_files = {}
     
     # Read hash file
-    with open(hash_file, 'r') as f:
+    with open(HASHFILE_PATH, 'r') as f:
         for line in f:
-            file_path, file_hash = line.strip().split(',')
-            current_hashes[file_path] = int(file_hash)
+            file_path, file_hash = line.strip().split('=')
+            previous_hashes[file_path] = int(file_hash)
+            previous_files[file_path] = 0
 
-    changed_filenames = []
+    new_files = []
+    hash_changed = []
+    deleted_files = []
     
     # Check integrity
-    for dirpath, dirnames, filenames in os.walk(directory):
+    for dirpath, dirnames, filenames in os.walk(DIR_PATH):
         for file in filenames:
             file_path = os.path.join(dirpath, file)
-            if file_path != hash_file:  # Exclude hash file
+            if file_path != HASHFILE_PATH:  # Exclude hash file
                 new_hash = calculate_hash(file_path)
-                if file_path in current_hashes:
-                    if current_hashes[file_path] != new_hash:
-                        changed_filenames.append(file_path)
+                if file_path in previous_hashes:
+                    previous_files[file_path] = 1
+                    if previous_hashes[file_path] != new_hash:
+                        hash_changed.append(file_path)
                 else:
-                    changed_filenames.append(file_path)  # Новый файл
+                    new_files.append(file_path)  # Новый файл
+    for filename, existence  in previous_files.items():
+        if not existence:
+            deleted_files.append(filename)
+    if len(new_files) > 0:
+        print("\nNew files:", new_files)
+    else:
+        print("\nНовых файлов не появилось")
 
-    return changed_filenames
+    if len(new_files) > 0:
+        print("\nHash was changed:\n", hash_changed)
+    else:
+        print("\nНи один из хешей не был изменен ")
+        
+    if len(new_files) > 0:
+        print("\nDeleted files:", deleted_files)
+    else:
+        print("\nНи один из файлов не был удален")
+     
+     
+
 
 if __name__ == "__main__":
-    directory_to_monitor = input("Введите путь к каталогу для мониторинга: ")
-    hash_file_path = os.path.join(directory_to_monitor, 'hashes.txt')
+    parser = ArgumentParser(prog='DiskRevizor', description='This programm checks all catalogue s files integrity', epilog='Help')
+    parser.add_argument("--catalogue", default=DIR_PATH, type=str, help="Catalogue to check")
+    args = parser.parse_args()
 
-    action = input("Вы хотите (1) сохранить хэши или (2) проверить целостность? (введите 1 или 2): ")
+    DIR_PATH = args.catalogue
+    HASHFILE_PATH = os.path.join(DIR_PATH, HASH_FILE_NAME) 
 
-    if action == '1':
-        save_hashes(directory_to_monitor, hash_file_path)
-        print(f"Хэш-суммы сохранены в {hash_file_path}.")
-    elif action == '2':
-        changes = check_integrity(directory_to_monitor, hash_file_path)
-        if changes:
-            print("Изменившиеся или новые файлы:")
-            for file in changes:
-                print(file)
-        else:
-            print("Нет изменений.")
-    else:
-        print("Неверный ввод.")
-
-def isFile(fpath):
-    return os.path.isfile(fpath)
-def isEmpty(fpath):  
-    return os.path.getsize(fpath) == 0
-
-
-# Args analyzing
-parser = ArgumentParser(
-                    prog='DiskRevizor',
-                    description='This programm checks content integrity in the catalogue ',
-                    epilog='Text at the bottom of help')
-parser.add_argument("catalogue", type=str, help="Catalogue to check", default="")
-parser.add_argument("hashfile", type=str, default="hashes.txt", help="Hash file name (it will be created if it doesn't exist)")
-parser.add_argument("-h", "--hash", help="Count hash", action='store_true')
-parser.add_argument("--check", help="Check integrity", action='store_true')
-
-args = parser.parse_args()
-need_hash = args.hash
-need_check = args.check
-catalogue = args.catalogue
-hashfile = os.path.join(catalogue, args.hashfile)
-
-
-if os.path.exists(catalogue):
-    file = open(hashfile, 'w+')
-        
-    if need_hash:
-        save_hashes(catalogue, hashfile)
-    if need_check:
-        if isEmpty(hashfile):
+    if os.path.exists(DIR_PATH):
+        if not os.path.exists(HASHFILE_PATH):
             save_hashes()
-        check_integrity(catalogue, hashfile)
-            
+        check_integrity()
          
-else:
-    print("Catalogue doesn't exist")        
-    
-        
-
-        
-    
-
+    else:
+        print("ERROR: Catalogue doesn't exist")   
 
  
-    
