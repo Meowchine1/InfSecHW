@@ -21,30 +21,37 @@
 Хэш-сумма вычислется как в Задаче 1.
 '''
 
+import subprocess
+
 import hashlib
 import os
-
 from Task1.DiskRevizor1 import calculate_hash
 
-# Константы
-HASH_FILE = 'hash_store.txt'
-MAGIC_WORD = 'MAGIC_WORD'
+
+PE_PATH = "C:\\Sgu-Infbez-Kate\\Task2\\pe.exe"
+HASH_FILE = 'C:\\Sgu-Infbez-Kate\\Task2\\hashfile.txt'
 
 def read_hash_file():
-    """Читает хэш из файла, если файл существует."""
     if not os.path.exists(HASH_FILE):
         return None
     
     with open(HASH_FILE, 'r') as f:
         lines = f.readlines()
-        if len(lines) == 0 or lines[0].strip() != MAGIC_WORD:
-            return lines[0].strip() if lines else None
+        hash = calculate_hash(PE_PATH)
+        if len(lines) == 0:
+            write_hash_to_file(hash)
+        else:
+            if lines == hash:
+                print("Целостность файла сохранена")
+            else:
+                print("Целостность файла нарушена")        
+            
     return None
 
 def write_hash_to_file(hash_value):
-    """Записывает хэш и волшебное слово в файл."""
     with open(HASH_FILE, 'w') as f:
-        f.write(f"{MAGIC_WORD}\n{hash_value}\n")
+        f.write(f"{hash_value}")
+
 
 def main():
     # Получаем путь к исполняемому файлу
@@ -67,5 +74,17 @@ def main():
         else:
             print("Предупреждение: целостность файла нарушена!")
 
+def run_external_script():
+    # Укажите путь к вашему внешнему скрипту
+    script_path = 'C:\\Sgu-Infbez-Kate\Task2\\autocontrol.py'
+    subprocess.run(['python', script_path])
+
+if __name__ == '__main__':
+     run_external_script()
+
+
+ 
+
 if __name__ == "__main__":
-    main()
+    #main()
+    # pyinstaller --onefile main.py

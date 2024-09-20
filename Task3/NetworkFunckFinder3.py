@@ -8,188 +8,10 @@
 
 
 Задание 3. Нахождение сетевых функций в PE-файле.
-Разработать программу, которая анализирует структуру PE-файла и находит в нем обращение к сетевым функциям. В результате прорамма дожна автоматически найти все файлы с сетевыми фикциями в указанном каталоге.
-Набор обнаруживаемых сетевых функций - 
-DeleteIPAddress
-FreeMibTable
-GetAdaptersAddresses
-GetAnycastIpAddressEntry
-GetAnycastIpAddressTable
-GetBestRoute2
-GetHostNameW
-GetIpAddrTable
-GetIpStatisticsEx
-GetUnicastIpAddressTable
-IcmpCloseHandle
-IcmpCreateFile
-IcmpCloseHandle
-IcmpSendEcho
-MultinetGetConnectionPerformance
-MultinetGetConnectionPerformanceW
-NetAlertRaise
-NetAlertRaiseEx
-NetApiBufferAllocate
-NetApiBufferFree
-NetApiBufferReallocate
-NetApiBufferSize
-NetFreeAadJoinInformation
-NetGetAadJoinInformation
-NetAddAlternateComputerName
-NetCreateProvisioningPackage
-NetEnumerateComputerNames
-NetGetJoinableOUs
-NetGetJoinInformation
-NetJoinDomain
-NetProvisionComputerAccount
-NetRemoveAlternateComputerName
-NetRenameMachineInDomain
-NetRequestOfflineDomainJoin
-NetRequestProvisioningPackageInstall
-NetSetPrimaryComputerName
-NetUnjoinDomain
-NetValidateName
-NetGetAnyDCName
-NetGetDCName
-NetGetDisplayInformationIndex
-NetQueryDisplayInformation
-NetGroupAdd
-NetGroupAddUser
-NetGroupDel
-NetGroupDelUser
-NetGroupEnum
-NetGroupGetInfo
-NetGroupGetUsers
-NetGroupSetInfo
-NetGroupSetUsers
-NetLocalGroupAdd
-NetLocalGroupAddMembers
-NetLocalGroupDel
-NetLocalGroupDelMembers
-NetLocalGroupEnum
-NetLocalGroupGetInfo
-NetLocalGroupGetMembers
-NetLocalGroupSetInfo
-NetLocalGroupSetMembers
-NetMessageBufferSend
-NetMessageNameAdd
-NetMessageNameDel
-NetMessageNameEnum
-NetMessageNameGetInfo
-NetFileClose
-NetFileEnum
-NetFileGetInfo
-NetRemoteComputerSupports
-NetRemoteTOD
-NetScheduleJobAdd
-NetScheduleJobDel
-NetScheduleJobEnum
-NetScheduleJobGetInfo
-GetNetScheduleAccountInformation
-SetNetScheduleAccountInformation
-NetServerDiskEnum
-NetServerEnum
-NetServerGetInfo
-NetServerSetInfo
-NetServerComputerNameAdd
-NetServerComputerNameDel
-NetServerTransportAdd
-NetServerTransportAddEx
-NetServerTransportDel
-NetServerTransportEnum
-NetWkstaTransportEnum
-NetUseAdd
-NetUseDel
-NetUseEnum
-NetUseGetInfo
-NetUserAdd
-NetUserChangePassword
-NetUserDel
-NetUserEnum
-NetUserGetGroups
-NetUserGetInfo
-NetUserGetLocalGroups
-NetUserSetGroups
-NetUserSetInfo
-NetUserModalsGet
-NetUserModalsSet
-NetValidatePasswordPolicyFree
-NetValidatePasswordPolicy
-NetWkstaGetInfo
-NetWkstaSetInfo
-NetWkstaUserEnum
-NetWkstaUserGetInfo
-NetWkstaUserSetInfo
-NetAccessAdd
-NetAccessCheck
-NetAccessDel
-NetAccessEnum
-NetAccessGetInfo
-NetAccessGetUserPerms
-NetAccessSetInfo
-NetAuditClear
-NetAuditRead
-NetAuditWrite
-NetConfigGet
-NetConfigGetAll
-NetConfigSet
-NetErrorLogClear
-NetErrorLogRead
-NetErrorLogWrite
-NetLocalGroupAddMember
-NetLocalGroupDelMember
-NetServiceControl
-NetServiceEnum
-NetServiceGetInfo
-NetServiceInstall
-NetWkstaTransportAdd
-NetWkstaTransportDel
-NetpwNameValidate
-NetapipBufferAllocate
-NetpwPathType
-NetApiBufferFree
-NetApiBufferAllocate
-NetApiBufferReallocate
-WNetAddConnection2
-WNetAddConnection2W
-WNetAddConnection3
-WNetAddConnection3W
-WNetCancelConnection
-WNetCancelConnectionW
-WNetCancelConnection2
-WNetCancelConnection2W
-WNetCloseEnum
-WNetCloseEnumW
-WNetConnectionDialog
-WNetConnectionDialogW
-WNetConnectionDialog1
-WNetConnectionDialog1W
-WNetDisconnectDialog
-WNetDisconnectDialogW
-WNetDisconnectDialog1
-WNetDisconnectDialog1W
-WNetEnumResource
-WNetEnumResourceW
-WNetGetConnection
-WNetGetConnectionW
-WNetGetLastError
-WNetGetLastErrorW
-WNetGetNetworkInformation
-WNetGetNetworkInformationW
-WNetGetProviderName
-WNetGetProviderNameW
-WNetGetResourceInformation
-WNetGetResourceInformationW
-WNetGetResourceParent
-WNetGetResourceParentW
-WNetGetUniversalName
-WNetGetUniversalNameW
-WNetGetUser
-WNetGetUserW
-WNetOpenEnum
-WNetOpenEnumW
-WNetRestoreConnectionW
-WNetUseConnection
-WNetUseConnectionW
+Разработать программу, которая анализирует структуру PE-файла и находит в нем обращение к сетевым функциям. 
+В результате прорамма дожна автоматически найти все файлы 
+с сетевыми фикциями в указанном каталоге.
+Набор обнаруживаемых сетевых функций - в файле networkFunc.txt
 Поиск функций ведется в секции импорта PE файла.
  структуры PE-файла
 С целью изучения можно пользоваться ресурсом
@@ -199,16 +21,20 @@ https://penet.azureedge.net/
 
 import itertools as it
 import pefile
+import os
 
 # Список сетевых функций для поиска
-NETWORK_FUNCTIONS = [
-  
-]
+NETWORK_FUNCTIONS = []
+DIR_PATH = "C:\\Sgu-Infbez-Kate\\Task3\\PE-files"
+PE_PATH = "C:\\Sgu-Infbez-Kate\\Task1\\files\\dmde-free-2.6.0.522-win32-gui\\dmde.exe"
+PE_PATH2 = "C:\\Sgu-Infbez-Kate\\Task3\\npcap-1.80.exe"
+PE_PATH3 = "C:\\Sgu-Infbez-Kate\\Task3\\utweb_installer.exe"
 
 
-def find_network_functions(pe_file_path):
+def find_network_functions(peFile):
+    print(f"\n -------- Analyze {peFile} --------- \n")
     try:
-        pe = pefile.PE(pe_file_path)
+        pe = pefile.PE(peFile)
     except Exception as e:
         print(f"Ошибка при открытии PE-файла: {e}")
         return
@@ -237,11 +63,16 @@ def find_network_functions(pe_file_path):
 
 if __name__ == "__main__":
     
-    with open(".\\networkFunc.txt",'r') as f:
+    with open("C:\\Sgu-Infbez-Kate\\Task3\\networkFunc.txt",'r') as f:
         contents = f.read()
         for entry in contents.split('\n'):
-            NETWORK_FUNCTIONS.append(entry) 
-    print(NETWORK_FUNCTIONS)
+            NETWORK_FUNCTIONS.append(entry)
+
+    for dirpath, dirN, fileN in os.walk(DIR_PATH):
+        for file in fileN:
+            file_path = os.path.join(dirpath, file)
+            find_network_functions(file_path)
+            
     
     # # Укажите путь к вашему PE-файлу
     # pe_file_path = 'path/to/your/file.exe'
